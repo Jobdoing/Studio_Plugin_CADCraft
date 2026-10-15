@@ -1,0 +1,9 @@
+Studio_Plugin_CADCraft
+Copyright (c) 2026 Jobdoing (沛米科技)
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This plugin embeds the CADCraft CAD engine, which is fetched and patched at build time by
+checks/prepare_vendor.py (upstream release 0.6.2 plus the Traditional Chinese localization from
+upstream pull request 529). CADCraft is dual-licensed under MIT OR Apache-2.0 by its authors; the
+built `cadcraft/` directory carries their LICENSE-MIT and LICENSE-APACHE files unchanged.

@@ -1,0 +1,21 @@
+{
+  "name": "studio-cad-viewer",
+  "version": "0.5.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "dev:serve": "node dev/serve-dev.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.39"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.10"
+  }
+}
