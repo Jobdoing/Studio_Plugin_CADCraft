@@ -50,13 +50,13 @@ it("keeps DXF bytes and explicitly preserves an empty serial number", async () =
 
 it.each(["version", "filename", "serial_number", "content_sha256"] as const)("refuses a changed source %s", async field => {
   Object.assign(stored, { [field]: field === "version" ? 4 : "changed" });
-  await expect(saveDrawing(edited, source)).rejects.toThrow("source changed");
+  await expect(saveDrawing(edited, source)).rejects.toThrow("已變更");
   expect(studio.docs.upload).not.toHaveBeenCalled();
 });
 
 it("rejects a folder moved outside the library", async () => {
   vi.mocked(studio.docs.tree).mockResolvedValue({ root_id: "root", folders: [] });
-  await expect(saveDrawing(edited, source)).rejects.toThrow("no longer");
+  await expect(saveDrawing(edited, source)).rejects.toThrow("已不在");
   expect(studio.docs.upload).not.toHaveBeenCalled();
 });
 
@@ -74,8 +74,8 @@ it("returns converter warnings after verifying the saved drawing", async () => {
 it.each(["serial", "bytes"])("does not claim success when saved %s cannot be verified", async failure => {
   if (failure === "serial") vi.mocked(studio.docs.upload).mockImplementation(async () => { stored = { ...stored, version: 4, serial_number: null }; return stored; });
   else vi.mocked(studio.docs.fetch).mockResolvedValue(new Blob(["AC1032 actual DWF"]));
-  await expect(saveDrawing(edited, source)).rejects.toThrow("verified");
+  await expect(saveDrawing(edited, source)).rejects.toThrow("驗證");
   expect(source.version).toBe(3);
-  await expect(saveDrawing(edited, source)).rejects.toThrow("source changed");
+  await expect(saveDrawing(edited, source)).rejects.toThrow("已變更");
   expect(studio.docs.upload).toHaveBeenCalledTimes(1);
 });

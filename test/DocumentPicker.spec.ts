@@ -34,7 +34,7 @@ it.each(["tree", "list", "fetch", "all"])("handles missing document capability: 
   vi.stubGlobal("studio", { docs });
   expect(() => { wrapper = mount(DocumentPicker, { props: { projectHandle: "selected-project" } }); }).not.toThrow();
   await flushPromises();
-  expect(wrapper.get('[role="alert"]').text()).toContain("document service is unavailable");
+  expect(wrapper.get('[role="alert"]').text()).toContain("文件服務");
   expect(wrapper.get("select").attributes("disabled")).toBeDefined();
   expect(tree).not.toHaveBeenCalled();
 });
@@ -67,7 +67,7 @@ it("does not substitute a similarly named folder when the library is missing", a
   vi.mocked(studio.docs.tree).mockResolvedValue({ root_id: "root", folders: [{ folder_id: "fake", parent_id: "root", name: "Drawing library", level: 1 }] });
   wrapper = mount(DocumentPicker, { props: { projectHandle: "selected-project" } });
   await flushPromises();
-  expect(wrapper.get('[role="alert"]').text()).toContain("unavailable");
+  expect(wrapper.get('[role="alert"]').text()).toContain("圖說庫資料夾");
   expect(wrapper.get("select").attributes("disabled")).toBeDefined();
   expect(studio.docs.list).not.toHaveBeenCalled();
 });
@@ -87,7 +87,7 @@ it("refuses to open when Studio omits serial metadata instead of clearing it on 
   await wrapper.get("form").trigger("submit");
   await flushPromises();
   expect(studio.docs.fetch).not.toHaveBeenCalled();
-  expect(wrapper.get('[role="alert"]').text()).toContain("serial number");
+  expect(wrapper.get('[role="alert"]').text()).toContain("流水號");
 });
 
 it("shows an empty CAD file without offering to open it", async () => {
@@ -96,7 +96,7 @@ it("shows an empty CAD file without offering to open it", async () => {
   await wrapper.get("select").setValue("plans");
   await flushPromises();
   expect(wrapper.get('input[type="checkbox"]').attributes("disabled")).toBeDefined();
-  expect(wrapper.text()).toContain("0 bytes");
+  expect(wrapper.text()).toContain("0 位元組");
   expect(studio.docs.fetch).not.toHaveBeenCalled();
 });
 
@@ -120,5 +120,5 @@ it("reports denied file access without opening anything", async () => {
   await wrapper.get("form").trigger("submit");
   await flushPromises();
   expect(wrapper.emitted("selected")).toBeUndefined();
-  expect(wrapper.get('[role="alert"]').text()).toContain("Check access");
+  expect(wrapper.get('[role="alert"]').text()).toContain("確認權限");
 });

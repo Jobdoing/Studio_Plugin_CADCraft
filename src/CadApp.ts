@@ -48,9 +48,9 @@ export const CadApp = defineComponent({
           const packet = pending.value[0];
           if (/\.(pdf|png|svg)$/i.test(packet.name)) await studio.download(packet.name, packet.bytes, mimeFor(packet.name));
           else {
-            if (!packet.source) throw new Error("Open a drawing from the drawing library before saving. Renamed Save As files need an explicit library destination.");
-            if (packet.source.project_handle !== state.project?.project_handle) throw new Error("Return to the original project before retrying this save.");
-            if (!/\.dxf$/i.test(packet.name)) throw new Error("The browser must send a DXF working copy for saving.");
+            if (!packet.source) throw new Error("請先從圖說庫開啟圖面再儲存。另存新檔的檔案需要指定圖說庫目的地。");
+            if (packet.source.project_handle !== state.project?.project_handle) throw new Error("請先切換回原本的專案，再重試此次儲存。");
+            if (!/\.dxf$/i.test(packet.name)) throw new Error("瀏覽器必須傳送 DXF 工作副本才能儲存。");
             const notes = await saveDrawing(packet.bytes, packet.source);
             if (notes.length) {
               warnings.value = [...warnings.value, ...notes];
@@ -62,7 +62,7 @@ export const CadApp = defineComponent({
           syncDirty();
         }
       } catch (failure) {
-        error.value = `${failure instanceof Error ? failure.message : "Save failed."} The file is retained here; retry before leaving.`;
+        error.value = `${failure instanceof Error ? failure.message : "儲存失敗。"} 檔案已保留在此處，請在離開前重試。`;
       } finally { saving.value = false; }
     }
 
@@ -79,7 +79,7 @@ export const CadApp = defineComponent({
         dialog.value?.showModal();
       }
       if (data.type === "cadcraft:ready") ready.value = true;
-      if (data.type === "cadcraft:failed") { error.value = "CADCraft could not start. Check browser WebGPU / WebGL2 support."; }
+      if (data.type === "cadcraft:failed") { error.value = "CADCraft 無法啟動，請確認瀏覽器支援 WebGPU / WebGL2。"; }
       if (data.type === "cadcraft:dirty" && typeof data.dirty === "boolean") { dirty.value = data.dirty; syncDirty(); }
       if (data.type === "cadcraft:save") {
         if (typeof data.name !== "string" || /[\0\r\n]/.test(data.name)) return;
@@ -98,7 +98,7 @@ export const CadApp = defineComponent({
     function selectFiles(selected: File[], sources: LibrarySource[]): void {
       if (!selected.length) return;
       if (selected.some(file => !/\.(dwg|dxf)$/i.test(file.name) || !file.size) || selected.reduce((sum, file) => sum + file.size, 0) > 30 * 1024 * 1024) {
-        error.value = "Select non-empty DWG / DXF files totaling at most 30 MiB."; return;
+        error.value = "請選取非空的 DWG / DXF 檔案，總大小不超過 30 MiB。"; return;
       }
       files.value = selected;
       selectedSources = sources;
@@ -128,15 +128,15 @@ export const CadApp = defineComponent({
         }
         if (!alive || request !== current || current.signal.aborted) return;
         const origin = selectedSources.find(item => item.filename === source.name);
-        if (!origin) throw new Error("The drawing library source is missing. Reopen the drawing.");
+        if (!origin) throw new Error("圖說庫來源已遺失，請重新開啟圖面。");
         const previous = opened.get(name);
         if (previous && (previous.file_id !== origin.file_id || previous.project_handle !== origin.project_handle || previous.version !== origin.version)) {
-          throw new Error("A different drawing with this working filename is already open. Reload CADCraft before opening this file.");
+          throw new Error("已有另一張使用相同工作檔名的圖面開啟中，請重新載入 CADCraft 後再開啟此檔案。");
         }
         opened.set(name, previous ?? { ...origin });
         frame.value?.contentWindow?.postMessage({ type: "cadcraft:open", name, bytes }, "*", [bytes]);
       } catch (failure) {
-        if (request === current && !current.signal.aborted) error.value = failure instanceof Error ? failure.message : "Drawing import failed.";
+        if (request === current && !current.signal.aborted) error.value = failure instanceof Error ? failure.message : "圖面匯入失敗。";
       } finally { if (request === current) busy.value = false; }
     }
 
@@ -146,28 +146,28 @@ export const CadApp = defineComponent({
     watchEffect(() => studio.toolbar.set({
       bottom: [],
       status: state.projectError || error.value || busy.value || saving.value ? {
-        text: state.projectError || (error.value ? "Action failed" : busy.value ? "Importing…" : "Saving…"),
+        text: state.projectError || (error.value ? "操作失敗" : busy.value ? "匯入中…" : "儲存中…"),
         tone: state.projectError || error.value ? "danger" : "neutral"
       } : undefined
     }));
     onBeforeUnmount(() => { alive = false; request?.abort(); stopViewport(); studio.toolbar.clear(); window.removeEventListener("message", receive); studio.dirty(false); });
 
     return () => h("section", { class: "cad-viewer" }, [
-      h("iframe", { ref: frame, class: "workspace", style: { height: `${height.value}px` }, title: "CADCraft drawing workspace", src: "./cadcraft/index.html?host=parent" }),
-      h("dialog", { ref: dialog, class: "kit-dialog", "aria-label": "CAD information" }, [
-        h("div", { class: "kit-dialog-header" }, [h("div", { class: "kit-dialog-heading" }, [h("h2", panel.value === "open" ? "Open CAD" : "Information")]), h("button", { type: "button", class: "kit-dialog-close", "aria-label": "Close", onClick: () => dialog.value?.close() }, "×")]),
+      h("iframe", { ref: frame, class: "workspace", style: { height: `${height.value}px` }, title: "CADCraft 繪圖工作區", src: "./cadcraft/index.html?host=parent" }),
+      h("dialog", { ref: dialog, class: "kit-dialog", "aria-label": "圖面資訊" }, [
+        h("div", { class: "kit-dialog-header" }, [h("div", { class: "kit-dialog-heading" }, [h("h2", panel.value === "open" ? "開啟圖面" : "資訊")]), h("button", { type: "button", class: "kit-dialog-close", "aria-label": "關閉", onClick: () => dialog.value?.close() }, "×")]),
         h("div", { class: "kit-dialog-body kit-form" }, [
           panel.value === "open" && state.project ? h(DocumentPicker, { key: pickerSession.value, projectHandle: state.project.project_handle, onSelected: selectFiles, onReady: (value: boolean) => { canOpenSelection.value = value; } }) : null,
-          panel.value === "open" && files.value.length > 1 ? h("div", { class: "kit-field" }, [h("label", { for: "cad-selected-file" }, "Open a selected file"), h("select", { id: "cad-selected-file", value: primary.value, disabled: busy.value, onChange: (event: Event) => { primary.value = (event.target as HTMLSelectElement).value; dialog.value?.close(); void open(); } }, files.value.map(file => h("option", { value: file.name }, file.name)))]) : null,
-          !state.project ? h("p", "Open the Studio menu and select a project before opening a drawing.") : null,
-          h("p", "Select related DWG references together. Save creates a new version in the original drawing library folder and preserves the serial number."),
+          panel.value === "open" && files.value.length > 1 ? h("div", { class: "kit-field" }, [h("label", { for: "cad-selected-file" }, "開啟所選檔案"), h("select", { id: "cad-selected-file", value: primary.value, disabled: busy.value, onChange: (event: Event) => { primary.value = (event.target as HTMLSelectElement).value; dialog.value?.close(); void open(); } }, files.value.map(file => h("option", { value: file.name }, file.name)))]) : null,
+          !state.project ? h("p", "請先在 Studio 選單中選擇專案，再開啟圖面。") : null,
+          h("p", "可一併選取相關的 DWG 參照。儲存時會在原本的圖說庫資料夾建立新版本，並保留流水號。"),
           error.value ? h("p", { class: "kit-callout", "data-status": "danger", role: "alert" }, error.value) : null,
           warnings.value.length ? h("div", { class: "kit-callout", "data-status": "warning", role: "status" }, [h("ul", warnings.value.map(warning => h("li", warning)))]) : null
         ]),
         h("div", { class: "kit-dialog-actions" }, [
-          panel.value === "open" && state.project ? h("button", { type: "submit", form: "cad-open-form", class: "kit-button", disabled: !canOpenSelection.value }, "Open selected CAD") : null,
-          pending.value.length ? h("button", { type: "button", class: "kit-button", disabled: saving.value, onClick: savePending }, "Retry save") : null,
-          h("button", { type: "button", class: "kit-button kit-button--secondary", onClick: () => dialog.value?.close() }, "Close")
+          panel.value === "open" && state.project ? h("button", { type: "submit", form: "cad-open-form", class: "kit-button", disabled: !canOpenSelection.value }, "開啟所選圖面") : null,
+          pending.value.length ? h("button", { type: "button", class: "kit-button", disabled: saving.value, onClick: savePending }, "重試儲存") : null,
+          h("button", { type: "button", class: "kit-button kit-button--secondary", onClick: () => dialog.value?.close() }, "關閉")
         ])
       ])
     ]);

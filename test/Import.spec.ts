@@ -22,7 +22,7 @@ describe("CAD upload through Studio", () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: btoa("0\nSECTION\n") }) });
     vi.stubGlobal("studio", { backend: { fetch } });
     await expect(exportDwg(new Uint8Array([1]), "project")).rejects.toThrow("busy");
-    await expect(exportDwg(new Uint8Array([1]), "project")).rejects.toThrow("did not return a DWG");
+    await expect(exportDwg(new Uint8Array([1]), "project")).rejects.toThrow("未回傳 DWG");
   });
   it("preserves the binary files, filenames and selected project", async () => {
     const fetch = vi.fn(async () => ({ ok: true, json: async () => ({ name: "plan.dxf", data: "AA==", warnings: [] }) }));

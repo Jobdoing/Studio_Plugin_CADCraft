@@ -3,6 +3,6 @@
   "title": "CADCraft",
   "kind": "app",
   "uses": { "studio-docs": { "access": "write" } },
-  "version": "0.5.3",
+  "version": "0.5.4",
   "backend": { "url": "http://127.0.0.1:8971", "timeout_s": 120 }
 }

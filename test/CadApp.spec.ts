@@ -87,11 +87,11 @@ describe("upstream CADCraft integration", () => {
     message(wrapper, { type: "cadcraft:request-open" });
     await flushPromises();
     expect(wrapper.find('input[type="file"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain("Drawing library folder");
+    expect(wrapper.find("#cad-library-folder").exists()).toBe(true);
     expect(studio.docs.tree).toHaveBeenCalledWith({ project_handle: "project-one" });
     state.project = { project_handle: "another-project", project_key: "another", name: "Another" };
     await flushPromises();
-    expect(wrapper.text()).not.toContain("Drawing library folder");
+    expect(wrapper.find("#cad-library-folder").exists()).toBe(false);
   });
 
   it("keeps the App shell on Studio folders even when landscape is wide", async () => {
@@ -102,7 +102,7 @@ describe("upstream CADCraft integration", () => {
     message(wrapper, { type: "cadcraft:request-open" });
     await flushPromises();
     expect(wrapper.find('input[type="file"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain("Drawing library folder");
+    expect(wrapper.find("#cad-library-folder").exists()).toBe(true);
   });
 
   it("retains failed downloads and keeps the Studio dirty guard until retry succeeds", async () => {
@@ -112,8 +112,8 @@ describe("upstream CADCraft integration", () => {
     message(wrapper, { type: "cadcraft:dirty", dirty: false });
     await flushPromises();
     expect(studio.dirty).toHaveBeenLastCalledWith(true);
-    expect(wrapper.get('[role="alert"]').text()).toContain("retained");
-    await wrapper.findAll("button").find(button => button.text() === "Retry save")!.trigger("click");
+    expect(wrapper.get('[role="alert"]').text()).toContain("保留");
+    await wrapper.findAll("button").find(button => button.text() === "重試儲存")!.trigger("click");
     await flushPromises();
     expect(studio.download).toHaveBeenCalledTimes(2);
     expect(studio.download).toHaveBeenLastCalledWith("plan.pdf", new Uint8Array([1, 2]), "application/pdf");
@@ -180,7 +180,7 @@ describe("upstream CADCraft integration", () => {
     expect(saveDrawing).toHaveBeenCalledWith(new Uint8Array([4, 5]), origin);
     expect(studio.download).not.toHaveBeenCalled();
     expect(studio.dirty).toHaveBeenLastCalledWith(true);
-    await wrapper.findAll("button").find(button => button.text() === "Retry save")!.trigger("click");
+    await wrapper.findAll("button").find(button => button.text() === "重試儲存")!.trigger("click");
     await flushPromises();
     expect(saveDrawing).toHaveBeenCalledTimes(2);
     expect(studio.dirty).toHaveBeenLastCalledWith(false);
@@ -194,7 +194,7 @@ describe("upstream CADCraft integration", () => {
     expect(saveDrawing).not.toHaveBeenCalled();
     expect(studio.download).not.toHaveBeenCalled();
     expect(studio.dirty).toHaveBeenLastCalledWith(true);
-    expect(wrapper.get('[role="alert"]').text()).toContain("destination");
+    expect(wrapper.get('[role="alert"]').text()).toContain("目的地");
   });
 
   it("shows conversion warnings after saving instead of silently dropping them", async () => {
@@ -214,7 +214,7 @@ describe("upstream CADCraft integration", () => {
     await flushPromises();
     wrapper.getComponent(DocumentPicker).vm.$emit("selected", [new File(["dwg"], "plan.dwg")], [{ ...origin, file_id: "another-drawing", folder_id: "another-folder" }]);
     await flushPromises();
-    expect(wrapper.get('[role="alert"]').text()).toContain("different drawing");
+    expect(wrapper.get('[role="alert"]').text()).toContain("另一張");
     message(wrapper, { type: "cadcraft:save", name: "plan.dxf", bytes: new Uint8Array([4]).buffer });
     await flushPromises();
     expect(saveDrawing).toHaveBeenCalledWith(new Uint8Array([4]), origin);
@@ -228,10 +228,10 @@ describe("upstream CADCraft integration", () => {
     message(wrapper, { type: "cadcraft:save", name: "plan.dxf", bytes: new Uint8Array([4]).buffer });
     await flushPromises();
     expect(saveDrawing).not.toHaveBeenCalled();
-    expect(wrapper.get('[role="alert"]').text()).toContain("original project");
+    expect(wrapper.get('[role="alert"]').text()).toContain("原本的專案");
     state.project = { project_handle: "project-one", project_key: "one", name: "One" };
     await flushPromises();
-    await wrapper.findAll("button").find(button => button.text() === "Retry save")!.trigger("click");
+    await wrapper.findAll("button").find(button => button.text() === "重試儲存")!.trigger("click");
     await flushPromises();
     expect(saveDrawing).toHaveBeenCalledWith(new Uint8Array([4]), origin);
   });

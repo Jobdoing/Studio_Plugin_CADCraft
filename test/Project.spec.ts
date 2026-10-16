@@ -33,7 +33,7 @@ describe("Studio initial project", () => {
       onProjectChange: (fn: typeof change) => { change = fn; return vi.fn(); } });
     initializeProject();
     await flushPromises();
-    expect(state.projectError).toContain("could not be loaded");
+    expect(state.projectError).toContain("無法載入專案");
     change(next);
     expect(state.projectError).toBe("");
     expect(state.project).toEqual(next);
